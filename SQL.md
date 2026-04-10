@@ -1,31 +1,32 @@
-CREATE DATABASE Ejemplo;
-USE Ejemplo;
-
+-- Tabla estudiante
 CREATE TABLE estudiante (
-id_estudiante INT PRIMARY KEY, // es un numero unico para cada estudiante
-nombre VARCHAR(50), // para guardar el nombre
-correo VARCHAR(50) // para guardar el correo
+  id_estudiante SERIAL PRIMARY KEY,
+  nombre        VARCHAR(50),
+  correo        VARCHAR(50)
 );
 
+-- Tabla cronometro
 CREATE TABLE cronometro (
-id_cronometro INT PRIMARY KEY, // numero unico del cronometro
-tiempo_trabajo INT, // tiempo que trabaja (en numeros)
-tiempo_descanso INT, // tiempo de descanso
-estado VARCHAR(50), // estado como activo o pausado
-id_estudiante INT // para saber a que estudiante pertenece
+  id_cronometro  SERIAL PRIMARY KEY,
+  tiempo_trabajo  INTEGER,
+  tiempo_descanso INTEGER,
+  estado          VARCHAR(50),
+  id_estudiante   INTEGER REFERENCES estudiante(id_estudiante) ON DELETE CASCADE
 );
 
+-- Tabla tarea
 CREATE TABLE tarea (
-id_tarea INT PRIMARY KEY, // numero unico de la tarea
-nombre VARCHAR(50), // nombre de la tarea
-descripcion VARCHAR(100), // explicacion de la tarea
-estado VARCHAR(50) // estado de la tarea
+  id_tarea    SERIAL PRIMARY KEY,
+  nombre      VARCHAR(50),
+  descripcion VARCHAR(100),
+  estado      VARCHAR(50)
 );
 
+-- Tabla notificacion
 CREATE TABLE notificacion (
-id_notificacion INT PRIMARY KEY, // numero unico
-tipo VARCHAR(50), // tipo de notificacion
-mensaje VARCHAR(100), // mensaje que se muestra
-id_cronometro INT, // relacion con cronometro
-id_tarea INT // relacion con tarea
+  id_notificacion SERIAL PRIMARY KEY,
+  tipo            VARCHAR(50),
+  mensaje         VARCHAR(100),
+  id_cronometro   INTEGER REFERENCES cronometro(id_cronometro) ON DELETE SET NULL,
+  id_tarea        INTEGER REFERENCES tarea(id_tarea) ON DELETE SET NULL
 );
