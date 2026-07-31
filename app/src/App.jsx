@@ -1,121 +1,95 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
+import Header from './components/Header'
+import Home from './components/Home'
+import Login from './components/Login'
+import Dashboard from './components/Dashboard'
+import { supabase } from './lib/supabaseClient'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [activeSection, setActiveSection] = useState('Inicio')
+  const [loading, setLoading] = useState(true)
+  const [statusMessage, setStatusMessage] = useState('')
+
+  useEffect(() => {
+    let subscription
+
+    const initAuth = async () => {
+      const { data } = await supabase.auth.getSession()
+      setIsAuthenticated(Boolean(data.session))
+      setLoading(false)
+    }
+
+    initAuth()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(Boolean(session))
+      if (!session) {
+        setActiveSection('Inicio')
+      }
+    })
+
+    subscription = authListener?.subscription
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
+  }, [])
+
+  const handleLogin = () => {
+    setIsAuthenticated(true)
+    setActiveSection('Inicio')
+    setStatusMessage('Has iniciado sesión correctamente.')
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setIsAuthenticated(false)
+    setActiveSection('Inicio')
+    setStatusMessage('Has cerrado sesión.')
+  }
+
+  const handleNavigate = (section) => {
+    setActiveSection(section)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <div className="app-shell min-vh-100 d-flex flex-column">
+      <Header
+        isAuthenticated={isAuthenticated}
+        activeSection={activeSection}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      />
+      <main className="flex-grow-1 container py-5">
+        {loading ? (
+          <div className="text-center py-5">Cargando sesión...</div>
+        ) : isAuthenticated ? (
+          <Dashboard activeSection={activeSection} />
+        ) : activeSection === 'Inicio' ? (
+          <>
+            {statusMessage && (
+              <div className="alert alert-info mb-4" role="alert">
+                {statusMessage}
+              </div>
+            )}
+            <Home />
+            <Login onLogin={handleLogin} onStatus={setStatusMessage} />
+          </>
+        ) : (
+          <>
+            {statusMessage && (
+              <div className="alert alert-info mb-4" role="alert">
+                {statusMessage}
+              </div>
+            )}
+            <Login onLogin={handleLogin} onStatus={setStatusMessage} />
+          </>
+        )}
+      </main>
+    </div>
   )
 }
 

@@ -3,6 +3,7 @@ import React from 'react'
 function Header({ isAuthenticated, activeSection, onNavigate, onLogout }) {
   const links = [
     { label: 'Inicio', key: 'Inicio', protected: false },
+    { label: 'Proyecto', key: 'Proyecto', protected: false },
     { label: 'Cronómetro', key: 'Cronómetro', protected: true },
     { label: 'Tareas', key: 'Tareas', protected: true },
     { label: 'Notificaciones', key: 'Notificaciones', protected: true },
