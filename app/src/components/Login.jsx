@@ -65,12 +65,19 @@ function Login({ onLogin, onStatus }) {
         <div className="col-xl-5 col-lg-6 col-md-8">
           <div className="card shadow-sm">
             <div className="card-body p-4">
-              <h1 className="card-title mb-3">{mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</h1>
-              <p className="card-text text-muted">
-                {mode === 'login'
-                  ? 'Accede para ver las secciones protegidas.'
-                  : 'Regístrate y confirma tu cuenta para empezar.'}
-              </p>
+              <div className="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                  <h1 className="card-title mb-1">{mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</h1>
+                  <p className="card-text mb-0 text-muted">
+                    {mode === 'login'
+                      ? 'Accede para ver las secciones protegidas.'
+                      : 'Regístrate y comienza a organizar tu día.'}
+                  </p>
+                </div>
+                <span className="badge bg-primary bg-opacity-10 text-primary py-2 px-3 rounded-pill">
+                  Cronómetro
+                </span>
+              </div>
 
               {error && (
                 <div className="alert alert-danger" role="alert">

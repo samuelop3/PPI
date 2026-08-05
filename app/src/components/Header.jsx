@@ -14,9 +14,9 @@ function Header({ isAuthenticated, activeSection, onNavigate, onLogout }) {
     <header className="app-header navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div className="container-fluid px-4 py-3">
         <div className="d-flex align-items-center gap-2">
-          <span className="badge bg-light text-primary fw-bold">PPI</span>
+          <span className="badge bg-light text-primary fw-bold">Cronómetro</span>
           <div>
-            <div className="text-white fs-5 mb-0">Productividad PPI</div>
+            <div className="text-white fs-5 mb-0">Cronómetro</div>
             <small className="text-white-50">App de tareas y tiempo</small>
           </div>
         </div>

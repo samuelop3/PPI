@@ -12,7 +12,7 @@ function Footer() {
           <div className="col-md-4">
             <h6>Contacto</h6>
             <ul className="list-unstyled mb-0">
-              <li>support@ppi.example</li>
+              <li>support@cronometro.example</li>
               <li>+52 55 1234 5678</li>
             </ul>
           </div>

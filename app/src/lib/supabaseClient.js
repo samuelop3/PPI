@@ -3,4 +3,91 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+const isDevFallback =
+  !supabaseUrl ||
+  !supabaseKey ||
+  supabaseUrl === 'http://localhost' ||
+  supabaseKey === 'anon_key_for_dev'
+
+function createDevAuth() {
+  const storageKey = 'cronometro-dev-auth'
+  const usersKey = 'cronometro-dev-users'
+
+  const getUsers = () => {
+    const raw = localStorage.getItem(usersKey)
+    return raw ? JSON.parse(raw) : {}
+  }
+
+  const setUsers = (users) => {
+    localStorage.setItem(usersKey, JSON.stringify(users))
+  }
+
+  const getSession = async () => {
+    const raw = localStorage.getItem(storageKey)
+    const session = raw ? JSON.parse(raw) : null
+    return { data: { session } }
+  }
+
+  const saveSession = (email) => {
+    const session = {
+      user: {
+        email,
+      },
+      access_token: 'dev-token',
+      expires_in: 3600,
+    }
+    localStorage.setItem(storageKey, JSON.stringify(session))
+    return session
+  }
+
+  return {
+    auth: {
+      getSession,
+      onAuthStateChange: (callback) => {
+        const subscription = {
+          unsubscribe: () => {},
+        }
+        return { data: null, subscription }
+      },
+      signInWithPassword: async ({ email, password }) => {
+        const users = getUsers()
+        const record = users[email]
+        if (!record || record.password !== password) {
+          return {
+            data: null,
+            error: {
+              message: 'Credenciales incorrectas. Verifica el correo y la contraseña.',
+            },
+          }
+        }
+        return {
+          data: { session: saveSession(email) },
+          error: null,
+        }
+      },
+      signUp: async ({ email, password }) => {
+        const users = getUsers()
+        if (users[email]) {
+          return {
+            data: null,
+            error: { message: 'El correo ya está registrado.' },
+          }
+        }
+        users[email] = { password }
+        setUsers(users)
+        return {
+          data: { user: { email } },
+          error: null,
+        }
+      },
+      signOut: async () => {
+        localStorage.removeItem(storageKey)
+        return { error: null }
+      },
+    },
+  }
+}
+
+export const supabase = isDevFallback
+  ? createDevAuth()
+  : createClient(supabaseUrl, supabaseKey)

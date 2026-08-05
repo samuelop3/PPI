@@ -7,9 +7,9 @@ function Proyecto() {
         <div className="col-xl-10 col-lg-11">
           <div className="card shadow-sm border-0">
             <div className="card-body p-5">
-              <h1 className="mb-4">Sobre el proyecto Productividad PPI</h1>
+              <h1 className="mb-4">Sobre el proyecto Cronómetro</h1>
               <p className="lead text-muted mb-4">
-                Productividad PPI es una aplicación web diseñada para ayudar a los usuarios a organizar su tiempo y tareas de forma práctica, con acceso seguro mediante inicio de sesión.
+                Cronómetro es una aplicación web diseñada para ayudar a los usuarios a organizar su tiempo y tareas de forma práctica, con acceso seguro mediante inicio de sesión.
               </p>
 
               <div className="row g-4">
