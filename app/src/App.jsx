@@ -4,6 +4,7 @@ import Home from './components/Home'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import { supabase } from './lib/supabaseClient'
+import { getUserRole } from './lib/localData'
 import './App.css'
 
 function App() {
@@ -11,21 +12,36 @@ function App() {
   const [activeSection, setActiveSection] = useState('Inicio')
   const [loading, setLoading] = useState(true)
   const [statusMessage, setStatusMessage] = useState('')
+  const [userRole, setUserRole] = useState('user')
 
   useEffect(() => {
     let subscription
 
     const initAuth = async () => {
       const { data } = await supabase.auth.getSession()
-      setIsAuthenticated(Boolean(data.session))
+      const isAuth = Boolean(data.session)
+      setIsAuthenticated(isAuth)
+      
+      // Cargar el rol del usuario si está autenticado
+      if (isAuth) {
+        const role = getUserRole()
+        setUserRole(role)
+      }
+      
       setLoading(false)
     }
 
     initAuth()
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(Boolean(session))
-      if (!session) {
+      const isAuth = Boolean(session)
+      setIsAuthenticated(isAuth)
+      
+      if (isAuth) {
+        const role = getUserRole()
+        setUserRole(role)
+      } else {
+        setUserRole('user')
         setActiveSection('Inicio')
       }
     })
@@ -40,6 +56,8 @@ function App() {
 
   const handleLogin = () => {
     setIsAuthenticated(true)
+    const role = getUserRole()
+    setUserRole(role)
     setActiveSection('Inicio')
     setStatusMessage('Has iniciado sesión correctamente.')
   }
@@ -47,6 +65,7 @@ function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setIsAuthenticated(false)
+    setUserRole('user')
     setActiveSection('Inicio')
     setStatusMessage('Has cerrado sesión.')
   }
@@ -62,12 +81,13 @@ function App() {
         activeSection={activeSection}
         onNavigate={handleNavigate}
         onLogout={handleLogout}
+        userRole={userRole}
       />
       <main className="flex-grow-1 container py-5">
         {loading ? (
           <div className="text-center py-5">Cargando sesión...</div>
         ) : isAuthenticated ? (
-          <Dashboard activeSection={activeSection} />
+          <Dashboard activeSection={activeSection} onNavigate={handleNavigate} userRole={userRole} />
         ) : activeSection === 'Inicio' ? (
           <>
             {statusMessage && (

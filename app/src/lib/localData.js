@@ -1,5 +1,6 @@
 const STORAGE_PREFIX = 'cronometro'
 const AUTH_KEY = 'cronometro-dev-auth'
+const ROLES_KEY = 'cronometro-user-roles'
 
 const getStored = (key, fallback) => {
   const raw = localStorage.getItem(key)
@@ -39,6 +40,27 @@ export const getProfile = () => {
 
 export const saveProfile = (profile) => {
   setStored(buildKey('profile'), profile)
+}
+
+// Funciones de roles
+export const getUserRole = () => {
+  const email = getCurrentEmail()
+  const roles = getStored(ROLES_KEY, {})
+  return roles[email] || 'user'
+}
+
+export const setUserRole = (email, role) => {
+  const roles = getStored(ROLES_KEY, {})
+  roles[email] = role
+  setStored(ROLES_KEY, roles)
+}
+
+export const getAllRoles = () => {
+  return getStored(ROLES_KEY, {})
+}
+
+export const changeUserRole = (email, role) => {
+  setUserRole(email, role)
 }
 
 export const getTasks = () => {
