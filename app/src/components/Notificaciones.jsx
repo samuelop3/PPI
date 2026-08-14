@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { addNotification, clearNotifications, getNotifications, saveNotifications, getProfile } from '../lib/localData'
-import { sendTestEmailNotification } from '../lib/emailService'
+import { sendEmailNotification } from '../lib/emailService'
 
 function Notificaciones() {
   const [notifications, setNotifications] = useState(getNotifications())
@@ -81,12 +81,13 @@ function Notificaciones() {
     try {
       const params = {
         to_email: notice.emailAddress,
+        to_name: getProfile().name || 'Usuario',
         subject: notice.title,
         message: notice.message,
         scheduled_time: new Date(notice.scheduledAt).toLocaleString(),
       }
 
-      const result = await sendTestEmailNotification(params)
+      const result = await sendEmailNotification(params)
 
       if (result.success) {
         // Marcar como enviada
