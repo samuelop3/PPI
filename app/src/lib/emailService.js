@@ -25,8 +25,20 @@ export const sendRealEmailNotification = async (params) => {
     const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
     const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
 
-    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) return { success: false }
-    if (SERVICE_ID === 'YOUR_SERVICE_ID' || TEMPLATE_ID === 'YOUR_TEMPLATE_ID') return { success: false }
+    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+      return { success: false, configured: false }
+    }
+
+    if (
+      SERVICE_ID === 'YOUR_SERVICE_ID' ||
+      SERVICE_ID === 'your_service_id_here' ||
+      TEMPLATE_ID === 'YOUR_TEMPLATE_ID' ||
+      TEMPLATE_ID === 'your_template_id_here' ||
+      PUBLIC_KEY === 'YOUR_PUBLIC_KEY' ||
+      PUBLIC_KEY === 'your_public_key_here'
+    ) {
+      return { success: false, configured: false }
+    }
 
     const result = await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
       to_email: params.to_email,
@@ -34,32 +46,19 @@ export const sendRealEmailNotification = async (params) => {
       message: params.message,
       scheduled_time: params.scheduled_time,
     })
-    
-    return { success: true, messageId: result.status }
-  } catch (error) {
-    return { success: false }
-  }
-}
 
-export const sendTestEmailNotification = async (params) => {
-  const sentEmails = JSON.parse(localStorage.getItem('cronometro-sent-emails') || '[]')
-  sentEmails.push({
-    id: Date.now().toString(),
-    to: params.to_email,
-    message: params.message,
-    sentAt: new Date().toISOString(),
-  })
-  localStorage.setItem('cronometro-sent-emails', JSON.stringify(sentEmails))
-  return { success: true, messageId: Date.now().toString() }
+    return { success: true, configured: true, messageId: result.status }
+  } catch (error) {
+    return { success: false, configured: true }
+  }
 }
 
 export const sendEmailNotification = async (params) => {
   const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-  
-  if (PUBLIC_KEY && PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
-    const result = await sendRealEmailNotification(params)
-    if (result.success) return result
+
+  if (!PUBLIC_KEY || PUBLIC_KEY === 'YOUR_PUBLIC_KEY' || PUBLIC_KEY === 'your_public_key_here') {
+    return { success: false, configured: false }
   }
-  
-  return await sendTestEmailNotification(params)
+
+  return await sendRealEmailNotification(params)
 }

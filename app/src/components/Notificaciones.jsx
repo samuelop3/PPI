@@ -86,16 +86,18 @@ function Notificaciones() {
         scheduled_time: new Date(notice.scheduledAt).toLocaleString(),
       })
 
+      if (!result.success) {
+        setStatus('⚠️ Gmail no está configurado. Revisa VITE_EMAILJS_PUBLIC_KEY, SERVICE_ID y TEMPLATE_ID en .env.local.')
+        return
+      }
+
       const updated = { ...sentNotifications, [noticeKey]: true }
       setSentNotifications(updated)
       localStorage.setItem('cronometro-sent-notifications', JSON.stringify(updated))
 
       setStatus(`✅ Correo enviado automáticamente a ${notice.emailAddress}`)
     } catch (error) {
-      const updated = { ...sentNotifications, [noticeKey]: true }
-      setSentNotifications(updated)
-      localStorage.setItem('cronometro-sent-notifications', JSON.stringify(updated))
-      setStatus(`✅ Notificación procesada para ${notice.emailAddress}`)
+      setStatus('⚠️ Error al enviar por Gmail. Verifica la configuración de EmailJS.')
     }
   }
 
