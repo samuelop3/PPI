@@ -36,13 +36,12 @@ export const sendRealEmailNotification = async (params) => {
       return { success: false, error: 'EmailJS no configurado - usa valores de prueba' }
     }
 
+    // Enviar parámetros simples - solo lo esencial
     const response = await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
       to_email: params.to_email,
       to_name: params.to_name || 'Usuario',
-      subject: params.subject,
-      message: params.message,
+      message: params.message, // Contenido principal del recordatorio
       scheduled_time: params.scheduled_time,
-      from_name: 'Cronómetro App',
     })
 
     console.log('✅ Correo enviado:', response.status)

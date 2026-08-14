@@ -41,24 +41,30 @@ Las notificaciones no se envían a Gmail porque EmailJS no está configurado.
 
 ---
 
-### ✅ Paso 4: Crear una Plantilla
+### ✅ Paso 4: Crear una Plantilla SIMPLE
 1. En el dashboard, ve a **Email Templates** (lado izquierdo)
 2. Haz clic en **Create New Template**
-3. Copia y pega esto en el editor:
+3. Copia y pega esto en el editor (versión simple - solo el mensaje):
 
 ```
-Subject: {{subject}}
+{{message}}
 
-¡Hola {{to_name}}!
+---
+⏰ Recordatorio programado para: {{scheduled_time}}
+Enviado desde Cronómetro App
+```
 
-Es hora de tu recordatorio programado:
+**Alternativa - Si quieres más información:**
+```
+🔔 Recordatorio
 
 {{message}}
 
 📅 Programado para: {{scheduled_time}}
+👤 Para: {{to_name}}
 
 ---
-Este correo fue generado automáticamente por Cronómetro App.
+Enviado desde Cronómetro App
 ```
 
 4. Haz clic en **Save** (debe mostrar "Template ID: template_xxxx")

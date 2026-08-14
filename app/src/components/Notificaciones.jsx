@@ -79,11 +79,11 @@ function Notificaciones() {
 
   const sendAutomaticEmail = async (notice, noticeKey) => {
     try {
+      // Parámetros simples: solo el mensaje y detalles básicos
       const params = {
         to_email: notice.emailAddress,
         to_name: getProfile().name || 'Usuario',
-        subject: notice.title,
-        message: notice.message,
+        message: notice.message, // Este es el contenido principal
         scheduled_time: new Date(notice.scheduledAt).toLocaleString(),
       }
 
