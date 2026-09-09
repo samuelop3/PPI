@@ -11,7 +11,7 @@ export const initEmailJS = () => {
     try {
       emailjs.init(PUBLIC_KEY)
       isInitialized = true
-    } catch (error) {
+    } catch {
       // Fallo silencioso
     }
   }
@@ -48,7 +48,7 @@ export const sendRealEmailNotification = async (params) => {
     })
 
     return { success: true, configured: true, messageId: result.status }
-  } catch (error) {
+  } catch {
     return { success: false, configured: true }
   }
 }

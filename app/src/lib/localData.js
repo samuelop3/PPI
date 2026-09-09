@@ -1,6 +1,7 @@
 const STORAGE_PREFIX = 'cronometro'
 const AUTH_KEY = 'cronometro-dev-auth'
 const ROLES_KEY = 'cronometro-user-roles'
+let currentEmail = null
 
 const getStored = (key, fallback) => {
   const raw = localStorage.getItem(key)
@@ -17,8 +18,13 @@ const setStored = (key, value) => {
 }
 
 export const getCurrentEmail = () => {
+  if (currentEmail) return currentEmail
   const session = getStored(AUTH_KEY, null)
   return session?.user?.email || 'invitado'
+}
+
+export const setCurrentEmail = (email) => {
+  currentEmail = email || null
 }
 
 const buildKey = (name) => `${STORAGE_PREFIX}:${getCurrentEmail()}:${name}`
@@ -83,6 +89,14 @@ export const getNotifications = () => {
 
 export const saveNotifications = (notifications) => {
   setStored(buildKey('notifications'), notifications)
+}
+
+export const getSentNotifications = () => {
+  return getStored(buildKey('sent-notifications'), {})
+}
+
+export const saveSentNotifications = (sentNotifications) => {
+  setStored(buildKey('sent-notifications'), sentNotifications)
 }
 
 export const addNotification = (notification) => {

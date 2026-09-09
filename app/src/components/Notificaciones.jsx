@@ -1,5 +1,13 @@
-import { useEffect, useState } from 'react'
-import { addNotification, clearNotifications, getNotifications, saveNotifications, getProfile } from '../lib/localData'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  addNotification,
+  clearNotifications,
+  getNotifications,
+  saveNotifications,
+  getProfile,
+  getSentNotifications,
+  saveSentNotifications,
+} from '../lib/localData'
 import { sendEmailNotification } from '../lib/emailService'
 
 function Notificaciones() {
@@ -12,7 +20,7 @@ function Notificaciones() {
   const [status, setStatus] = useState('')
   const [emailAddress, setEmailAddress] = useState(getProfile().email || '')
   const [sentNotifications, setSentNotifications] = useState(
-    JSON.parse(localStorage.getItem('cronometro-sent-notifications') || '{}')
+    getSentNotifications(),
   )
 
   // Intervalo que verifica notificaciones cada 10 segundos (no cada 1 segundo para evitar duplicados)
@@ -75,9 +83,9 @@ function Notificaciones() {
     }, 10000) // Verificar cada 10 segundos en lugar de 1 segundo
 
     return () => clearInterval(interval)
-  }, [sentNotifications])
+  }, [sentNotifications, sendAutomaticEmail])
 
-  const sendAutomaticEmail = async (notice, noticeKey) => {
+  const sendAutomaticEmail = useCallback(async (notice, noticeKey) => {
     try {
       const result = await sendEmailNotification({
         to_email: notice.emailAddress,
@@ -93,13 +101,13 @@ function Notificaciones() {
 
       const updated = { ...sentNotifications, [noticeKey]: true }
       setSentNotifications(updated)
-      localStorage.setItem('cronometro-sent-notifications', JSON.stringify(updated))
+      saveSentNotifications(updated)
 
       setStatus(`✅ Correo enviado automáticamente a ${notice.emailAddress}`)
-    } catch (error) {
+    } catch {
       setStatus('⚠️ Error al enviar por Gmail. Verifica la configuración de EmailJS.')
     }
-  }
+  }, [sentNotifications])
 
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) return false

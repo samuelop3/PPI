@@ -4,7 +4,7 @@ import Home from './components/Home'
 import Login from './components/Login'
 import Dashboard from './components/Dashboard'
 import { supabase } from './lib/supabaseClient'
-import { getUserRole } from './lib/localData'
+import { getUserRole, setCurrentEmail } from './lib/localData'
 import './App.css'
 
 function App() {
@@ -21,6 +21,7 @@ function App() {
       const { data } = await supabase.auth.getSession()
       const isAuth = Boolean(data.session)
       setIsAuthenticated(isAuth)
+      setCurrentEmail(data.session?.user?.email)
       
       // Cargar el rol del usuario si está autenticado
       if (isAuth) {
@@ -33,9 +34,10 @@ function App() {
 
     initAuth()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       const isAuth = Boolean(session)
       setIsAuthenticated(isAuth)
+      setCurrentEmail(session?.user?.email)
       
       if (isAuth) {
         const role = getUserRole()

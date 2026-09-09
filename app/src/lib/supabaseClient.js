@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_KEY
 
 const isDevFallback =
   !supabaseUrl ||
@@ -14,8 +14,12 @@ function createDevAuth() {
   const usersKey = 'cronometro-dev-users'
 
   const getUsers = () => {
-    const raw = localStorage.getItem(usersKey)
-    return raw ? JSON.parse(raw) : {}
+    try {
+      const raw = localStorage.getItem(usersKey)
+      return raw ? JSON.parse(raw) : {}
+    } catch {
+      return {}
+    }
   }
 
   const setUsers = (users) => {
@@ -23,9 +27,19 @@ function createDevAuth() {
   }
 
   const getSession = async () => {
-    const raw = localStorage.getItem(storageKey)
-    const session = raw ? JSON.parse(raw) : null
+    let session = null
+    try {
+      const raw = localStorage.getItem(storageKey)
+      session = raw ? JSON.parse(raw) : null
+    } catch {
+      localStorage.removeItem(storageKey)
+    }
     return { data: { session } }
+  }
+
+  const listeners = new Set()
+  const notify = (event, session) => {
+    listeners.forEach((callback) => callback(event, session))
   }
 
   const saveSession = (email) => {
@@ -37,6 +51,7 @@ function createDevAuth() {
       expires_in: 3600,
     }
     localStorage.setItem(storageKey, JSON.stringify(session))
+    notify('SIGNED_IN', session)
     return session
   }
 
@@ -44,10 +59,8 @@ function createDevAuth() {
     auth: {
       getSession,
       onAuthStateChange: (callback) => {
-        const subscription = {
-          unsubscribe: () => {},
-        }
-        return { data: null, subscription }
+        listeners.add(callback)
+        return { data: { subscription: { unsubscribe: () => listeners.delete(callback) } } }
       },
       signInWithPassword: async ({ email, password }) => {
         const users = getUsers()
@@ -82,6 +95,7 @@ function createDevAuth() {
       },
       signOut: async () => {
         localStorage.removeItem(storageKey)
+        notify('SIGNED_OUT', null)
         return { error: null }
       },
     },

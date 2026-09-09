@@ -318,6 +318,184 @@ main {
   min-width: 120px;
 }
 
+:root {
+  --bg: #f5f1e9;
+  --surface: rgba(255, 253, 249, 0.96);
+  --surface-strong: #fffdf9;
+  --surface-soft: rgba(255, 253, 249, 0.78);
+  --text: #243238;
+  --text-muted: #647278;
+  --border: rgba(36, 50, 56, 0.14);
+  --accent: #d66d56;
+  --accent-2: #78a18d;
+  --accent-soft: rgba(214, 109, 86, 0.14);
+  --accent-strong: #a94d3c;
+  --shadow: 0 22px 55px rgba(53, 61, 55, 0.13);
+  --font: 'Avenir Next', 'Trebuchet MS', sans-serif;
+}
+
+body {
+  background: #456d68 !important;
+  font-family: var(--font);
+}
+
+.app-shell {
+  background: #456d68;
+  animation: app-enter 0.7s ease-out both;
+}
+
+@keyframes app-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    box-shadow: 0 14px 35px rgba(214, 109, 86, 0.2);
+  }
+  50% {
+    box-shadow: 0 18px 42px rgba(214, 109, 86, 0.34);
+  }
+}
+
+.app-header {
+  background: linear-gradient(135deg, #26363b 0%, #42615d 62%, #78a18d 100%) !important;
+  box-shadow: 0 18px 38px rgba(38, 54, 59, 0.2);
+}
+
+.hero-card,
+.card,
+.section-card {
+  border-color: rgba(120, 161, 141, 0.22);
+  animation: card-enter 0.65s ease-out both;
+}
+
+.hero-card {
+  box-shadow: 0 28px 80px rgba(54, 70, 61, 0.14);
+}
+
+.feature-pill {
+  background: rgba(120, 161, 141, 0.16);
+  color: #3e6c5b;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #d66d56 0%, #bb5948 100%);
+  box-shadow: 0 12px 30px rgba(214, 109, 86, 0.24);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  transform: translateY(-2px);
+  animation: soft-pulse 1.6s ease-in-out infinite;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: linear-gradient(135deg, #b95746 0%, #9e4437 100%);
+}
+
+.btn-outline-primary {
+  color: #ae503e;
+  border-color: #d66d56;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  color: #fff;
+  background-color: #d66d56;
+  border-color: #d66d56;
+}
+
+.dashboard-page .section-card::after {
+  background: radial-gradient(circle, rgba(120, 161, 141, 0.18), transparent 62%);
+}
+
+.home-page .border.rounded-3,
+.project-page .border.rounded-3,
+.notificaciones-section .border.rounded-3,
+.tareas-section .border.rounded-3,
+.perfil-section .border.rounded-3,
+.cronometro-section .border.rounded-3 {
+  background: rgba(255, 253, 249, 0.82);
+  border-color: rgba(120, 161, 141, 0.2) !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.home-page .border.rounded-3:hover,
+.project-page .border.rounded-3:hover,
+.notificaciones-section .border.rounded-3:hover,
+.tareas-section .border.rounded-3:hover,
+.perfil-section .border.rounded-3:hover,
+.cronometro-section .border.rounded-3:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 38px rgba(36, 54, 52, 0.16);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #78a18d;
+  box-shadow: 0 0 0 0.2rem rgba(120, 161, 141, 0.2);
+}
+
+.side-menu {
+  border-color: rgba(120, 161, 141, 0.2) !important;
+  background: rgba(255, 253, 249, 0.9) !important;
+}
+
+.side-menu-item.active {
+  background: rgba(214, 109, 86, 0.14) !important;
+  color: #a94d3c !important;
+  animation: card-enter 0.35s ease-out both;
+}
+
+.feature-pill {
+  animation: soft-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 768px) {
+  main {
+    padding-top: 2rem;
+  }
+
+  .home-page .card-body,
+  .project-page .card-body,
+  .login-page .card-body,
+  .dashboard-page .section-card {
+    padding: 1.5rem;
+  }
+}
+
 .tareas-section .list-group-item {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
