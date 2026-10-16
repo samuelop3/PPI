@@ -1,41 +1,58 @@
 import { useEffect, useState } from 'react'
-import { addTask, getTasks, saveTasks } from '../lib/localData'
+import { createTask, deleteTask, loadTasks, setTaskCompleted } from '../lib/dataService'
 
 function Tareas() {
-  const [tasks, setTasks] = useState(getTasks())
+  const [tasks, setTasks] = useState([])
   const [text, setText] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    saveTasks(tasks)
-  }, [tasks])
+    loadTasks()
+      .then(setTasks)
+      .catch((loadError) => setError(`No se pudieron cargar las tareas: ${loadError.message}`))
+      .finally(() => setLoading(false))
+  }, [])
 
-  const handleAdd = (event) => {
+  const handleAdd = async (event) => {
     event.preventDefault()
     const trimmed = text.trim()
     if (!trimmed) return
 
-    const newTask = {
-      id: Date.now().toString(),
-      title: trimmed,
-      completed: false,
-      createdAt: new Date().toISOString(),
+    setSaving(true)
+    setError('')
+    try {
+      const newTask = await createTask(trimmed)
+      setTasks((current) => [newTask, ...current])
+      setText('')
+    } catch (saveError) {
+      setError(`No se pudo guardar la tarea: ${saveError.message}`)
+    } finally {
+      setSaving(false)
     }
-
-    addTask(newTask)
-    setTasks((current) => [newTask, ...current])
-    setText('')
   }
 
-  const handleToggle = (taskId) => {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      ),
-    )
+  const handleToggle = async (task) => {
+    setError('')
+    try {
+      await setTaskCompleted(task.id, !task.completed)
+      setTasks((current) =>
+        current.map((item) => item.id === task.id ? { ...item, completed: !item.completed } : item),
+      )
+    } catch (saveError) {
+      setError(`No se pudo actualizar la tarea: ${saveError.message}`)
+    }
   }
 
-  const handleDelete = (taskId) => {
-    setTasks((current) => current.filter((task) => task.id !== taskId))
+  const handleDelete = async (taskId) => {
+    setError('')
+    try {
+      await deleteTask(taskId)
+      setTasks((current) => current.filter((task) => task.id !== taskId))
+    } catch (deleteError) {
+      setError(`No se pudo eliminar la tarea: ${deleteError.message}`)
+    }
   }
 
   return (
@@ -45,6 +62,7 @@ function Tareas() {
           <div className="border rounded-3 p-4 h-100">
             <h2 className="h5">Crear tarea</h2>
             <p className="text-muted mb-3">Agrega actividades para tu día.</p>
+            {error && <div className="alert alert-danger" role="alert">{error}</div>}
             <form onSubmit={handleAdd}>
               <div className="mb-3">
                 <label htmlFor="taskInput" className="form-label">
@@ -57,10 +75,12 @@ function Tareas() {
                   value={text}
                   onChange={(event) => setText(event.target.value)}
                   placeholder="Ej. Revisar correo"
+                  maxLength="500"
+                  required
                 />
               </div>
-              <button type="submit" className="btn btn-primary w-100">
-                Agregar tarea
+              <button type="submit" className="btn btn-primary w-100" disabled={saving}>
+                {saving ? 'Guardando…' : 'Agregar tarea'}
               </button>
             </form>
           </div>
@@ -70,7 +90,9 @@ function Tareas() {
           <div className="border rounded-3 p-4 h-100">
             <h2 className="h5">Lista de tareas</h2>
             <p className="text-muted mb-3">Marca lo completado y administra tu progreso.</p>
-            {tasks.length === 0 ? (
+            {loading ? (
+              <p role="status">Cargando tareas…</p>
+            ) : tasks.length === 0 ? (
               <div className="alert alert-secondary" role="alert">
                 Aún no hay tareas. Crea una tarea para comenzar.
               </div>
@@ -92,7 +114,7 @@ function Tareas() {
                       <button
                         type="button"
                         className={`btn btn-sm ${task.completed ? 'btn-outline-secondary' : 'btn-success'}`}
-                        onClick={() => handleToggle(task.id)}
+                        onClick={() => handleToggle(task)}
                       >
                         {task.completed ? 'Reabrir' : 'Completar'}
                       </button>

@@ -1,5 +1,7 @@
 # Taller: De lo que ya tienen (login, Supabase, mapa) a Historias de Usuario
 
+> Estado actualizado: el esquema que usa la aplicación está en [`../supabase/schema.sql`](../supabase/schema.sql). Este documento conserva el ejercicio original, pero su inventario y deuda de datos se mantienen alineados con ese esquema.
+
 ## Entregable generado
 - Inventario de roles, tablas y pantallas
 - Historias de usuario por pantalla
@@ -13,24 +15,27 @@
 ## Actividad 1 — Inventario (extraído del código y SQL)
 
 **1A. Roles / Actores identificados en el login**
-- **Estudiante (usuario autenticado):** identificado en Supabase por la tabla `estudiante` (campos principales: `id_estudiante`, `correo`, `nombre`). No se detectan roles administrativos explícitos.
+- **Usuario:** propietario de su perfil, tareas, ajustes Pomodoro y recordatorios.
+- **Moderador:** consulta los reportes agregados.
+- **Administrador:** gestiona roles y puede consultar reportes.
+- Los roles se guardan en `profiles.role`; las operaciones administrativas se validan en funciones de servidor y políticas de Supabase.
 
 **1B. Tablas de Supabase**
-- **`estudiante`** — Campos clave: `id_estudiante`, `nombre`, `correo`, `created_at`. Representa a los usuarios/estudiantes.
-- **`cronometro`** — Campos clave: `id_cronometro`, `tiempo_trabajo`, `tiempo_descanso`, `estado`, `id_estudiante`. Representa sesiones de cronómetro asociadas a un estudiante.
-- **`tarea`** — Campos clave: `id_tarea`, `nombre`, `descripcion`, `estado`, (posible) `id_estudiante`. Representa tareas del usuario.
-- **`notificacion`** — Campos clave: `id_notificacion`, `tipo`, `mensaje`, `id_cronometro`, `id_tarea`. Representa avisos relacionados a cronómetros o tareas.
-
-(Se detectaron dos variantes en los SQL; confirmar esquema final: `tarea` y `cronometro` deben referenciar `id_estudiante`.)
+- **`profiles`** — Perfil vinculado por UUID a `auth.users`; incluye los roles.
+- **`tasks`** — Tareas con propietario, título y estado completado.
+- **`pomodoro_settings`** — Preferencias de duración de trabajo y descanso del propietario.
+- **`notifications`** — Recordatorios programados con estado, destinatario, intentos y resultado de envío.
+- Todas las tablas activan Row Level Security. La función Edge procesa el correo en segundo plano.
 
 **1C. Pantallas (sitemap extraído de componentes)**
 - **Home** — Visible a: público / visitante. Tablas: —
-- **Login / Registro** — Visible a: visitante. Tablas: auth (Supabase Auth) y `estudiante` (registro/confirmación).
-- **Dashboard** (panel protegido) — Visible a: `Estudiante` autenticado. Subpantallas: `Cronómetro`, `Tareas`, `Notificaciones`, `Perfil`, `Proyecto`.
+- **Login / Registro** — Visible a: visitante. Tablas: Supabase Auth y trigger de perfil.
+- **Dashboard** (panel protegido) — Visible a: usuario autenticado. Subpantallas: `Cronómetro`, `Tareas`, `Notificaciones`, `Perfil`; `Reportes` para moderadores/administradores y `Admin` para administradores.
 - **Proyecto** — Visible a: público y autenticado (informativa). Tablas: —
-- **Perfil** — Visible a: `Estudiante` autenticado. Tablas: `estudiante`.
-- **Tareas** — Visible a: `Estudiante` autenticado. Tablas: `tarea` (y posiblemente `estudiante`).
-- **Notificaciones** — Visible a: `Estudiante` autenticado. Tablas: `notificacion` (+ relaciones a `cronometro`/`tarea`).
+- **Perfil** — Visible a: usuario autenticado. Tabla: `profiles`.
+- **Tareas** — Visible a: usuario autenticado. Tabla: `tasks`.
+- **Cronómetro** — Visible a: usuario autenticado. Tabla: `pomodoro_settings`.
+- **Notificaciones** — Visible a: usuario autenticado. Tabla: `notifications`.
 
 ---
 
@@ -62,29 +67,19 @@
 
 ## Actividad 3 — Historias CRUD por tabla
 
-Tabla `estudiante`:
-- Create: Aplica — Historia: Como visitante quiero registrarme con correo/contraseña para crear mi perfil. (Pantalla: Login/Registro)
-- Read: Aplica — Historia: Como estudiante quiero ver mi perfil para consultar mis datos. (Pantalla: Perfil)
-- Update: Aplica — Historia: Como estudiante quiero editar mi nombre/correo para actualizar mi perfil. (Pantalla: Perfil)
-- Delete: Opcional — Historia: Como estudiante quiero eliminar mi cuenta para borrar mis datos (podría requerir pantalla/flujo propio).
+Tabla `profiles`:
+- Create: Al registrarse, un trigger crea el perfil con rol `user`.
+- Read/Update: El usuario consulta y modifica sus propios datos; solo un administrador puede listar perfiles y cambiar roles mediante funciones protegidas.
 
-Tabla `cronometro`:
-- Create: Aplica — Historia: Como estudiante quiero iniciar un cronómetro para registrar una sesión. (Pantalla: Cronómetro)
-- Read: Aplica — Historia: Como estudiante quiero ver el estado del cronómetro para saber tiempo restante/estado. (Pantalla: Cronómetro)
-- Update: Aplica — Historia: Como estudiante quiero pausar o finalizar el cronómetro para detener la sesión. (Pantalla: Cronómetro)
-- Delete: Rara — Historia: Como estudiante quiero eliminar sesiones antiguas para limpiar mi historial. (Pantalla: Cronómetro / Historial)
+Tabla `pomodoro_settings`:
+- Create/Read/Update: El usuario mantiene sus duraciones de trabajo y descanso.
 
-Tabla `tarea`:
-- Create: Aplica — Historia: Como estudiante quiero crear tareas. (Pantalla: Tareas)
-- Read: Aplica — Historia: Como estudiante quiero listar mis tareas. (Pantalla: Tareas)
-- Update: Aplica — Historia: Como estudiante quiero marcar una tarea como completada o editarla. (Pantalla: Tareas)
-- Delete: Aplica — Historia: Como estudiante quiero eliminar una tarea. (Pantalla: Tareas)
+Tabla `tasks`:
+- Create/Read/Update/Delete: El usuario administra únicamente sus propias tareas.
 
-Tabla `notificacion`:
-- Create: Generalmente creada por el sistema — Historia: Como sistema quiero generar notificaciones vinculadas a cronómetros/tareas. (Backend)
-- Read: Aplica — Historia: Como estudiante quiero ver mis notificaciones. (Pantalla: Notificaciones)
-- Update: Pocas veces — marcar leída podría aplicar.
-- Delete: Opcional — permitir limpiar notificaciones.
+Tabla `notifications`:
+- Create/Read/Delete: El usuario programa y consulta sus recordatorios; el acceso queda limitado a su cuenta.
+- Update de estado: exclusivo del worker de servidor; el usuario puede solicitar un reintento de un recordatorio fallido mediante una función protegida.
 
 ---
 
@@ -195,23 +190,22 @@ Sprint 2 (funcionalidad principal):
 - Cronómetro (start/pause/finish con persistencia), completar tarea, ver notificaciones.
 
 Sprint 3 (extras / roles avanzados):
-- Historial, borrado avanzado, mejoras de UI, roles/admin.
+- Reportes agregados para moderadores y administración de roles protegida para administradores.
 
 ---
 
-## Cierre — Deuda de datos
+## Cierre — Puesta en marcha
 
-- Confirmar que la tabla `tarea` incluye `id_estudiante` como FK en el esquema de producción (hay versiones mixtas en los SQL). Si falta, agregar campo y políticas RLS.
-- Alinear la forma en que `auth.uid()` se compara con `estudiante`: usar `auth.uid()` -> `id_estudiante` (UUID) o usar `correo` consistentemente; hoy hay mezcla entre comparar con `correo` y con `id_estudiante`.
-- Añadir timestamp/estado para notificaciones leídas si se desea marcar como "leída".
-- Decidir si se necesita una tabla intermedia para vincular tareas con cronómetros o proyectos (si se planea esa relación).
+- Ejecutar `supabase/schema.sql` en el proyecto Supabase y configurar variables de entorno.
+- Asignar el primer administrador desde el SQL Editor.
+- Para enviar correos con la página cerrada, desplegar la función Edge y configurar el cron de `supabase/schedule_notifications.sql`.
+- Las sesiones individuales del cronómetro siguen siendo temporales; se sincronizan las duraciones configuradas, no un historial de sesiones.
 
 ---
 
 ## Siguientes pasos sugeridos
-- Revisar el esquema en Supabase y confirmar FK `id_estudiante` en `tarea` y `cronometro`.
-- Implementar endpoints/funciones mínimas para crear tareas y cronómetros y aplicar políticas RLS según las historias.
-- Convertir las 5 historias Gherkin en tests E2E o pruebas unitarias.
+- Ejecutar pruebas manuales con cuentas de usuario, moderador y administrador en un proyecto Supabase configurado.
+- Añadir pruebas de extremo a extremo cuando se defina el entorno de CI del proyecto.
 
 ---
 

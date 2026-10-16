@@ -73,3 +73,4 @@ SELECT id_cronometro FROM cronometro
 WHERE auth.uid()::text = id_estudiante::text
 )
 );
+> LEGACY: este esquema contiene políticas antiguas e incompatibles. No las ejecutes en producción; usa [`supabase/schema.sql`](./supabase/schema.sql).

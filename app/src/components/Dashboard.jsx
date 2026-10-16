@@ -6,8 +6,9 @@ import Notificaciones from './Notificaciones'
 import Perfil from './Perfil'
 import Proyecto from './Proyecto'
 import AdminPanel from './AdminPanel'
+import Reportes from './Reportes'
 
-function Dashboard({ activeSection, onNavigate, userRole = 'user' }) {
+function Dashboard({ activeSection, onNavigate, userRole = 'user', statusMessage = '' }) {
   let SectionComponent = Cronometro
   let title = 'Cronómetro'
   let description = 'Desde aquí puedes acceder a las secciones protegidas de la aplicación.'
@@ -39,28 +40,22 @@ function Dashboard({ activeSection, onNavigate, userRole = 'user' }) {
       icon = '📋'
       break
     case 'Admin':
-      SectionComponent = AdminPanel
-      title = 'Administración'
-      description = 'Panel exclusivo para administradores del sistema.'
-      icon = '⚙️'
+      if (userRole !== 'admin') {
+        SectionComponent = () => <div className="alert alert-danger" role="alert">No tienes permiso para acceder a esta sección.</div>
+        title = 'Acceso denegado'
+        description = 'Esta sección está reservada a administradores.'
+        icon = '🔒'
+      } else {
+        SectionComponent = AdminPanel
+        title = 'Administración'
+        description = 'Gestiona usuarios y roles protegidos en el servidor.'
+        icon = '⚙️'
+      }
       break
     case 'Reportes':
-      SectionComponent = () => (
-        <div>
-          <h3>Reportes y Estadísticas</h3>
-          <p className="text-muted">
-            Vista de reportes y datos analíticos. Disponible para moderadores y administradores.
-          </p>
-          <div className="alert alert-info">
-            <strong>Tipos de Reportes:</strong>
-            <ul className="mb-0 mt-2">
-              <li>Uso de cronómetro</li>
-              <li>Tareas completadas</li>
-              <li>Estadísticas de usuarios</li>
-            </ul>
-          </div>
-        </div>
-      )
+      SectionComponent = ['admin', 'moderator'].includes(userRole)
+        ? Reportes
+        : () => <div className="alert alert-danger" role="alert">No tienes permiso para consultar los reportes.</div>
       title = 'Reportes'
       description = 'Análisis y estadísticas del sistema.'
       icon = '📈'
@@ -109,6 +104,7 @@ function Dashboard({ activeSection, onNavigate, userRole = 'user' }) {
 
       {/* Contenido principal */}
       <div className="dashboard-content flex-grow-1">
+        {statusMessage && <div className="alert alert-info text-start" role="status">{statusMessage}</div>}
         <div className="mb-4 text-start">
           <div className="d-flex align-items-center gap-2 mb-2">
             <span className="fs-4">{icon}</span>

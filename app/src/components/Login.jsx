@@ -19,43 +19,35 @@ function Login({ onLogin, onStatus }) {
     }
 
     setLoading(true)
+    try {
+      if (mode === 'login') {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+        if (authError) {
+          setError(authError.message)
+          return
+        }
+        if (data?.session) onLogin()
+        else setError('No se pudo iniciar sesión. Verifica tus credenciales.')
+        return
+      }
 
-    if (mode === 'login') {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: { data: { name: '' } },
       })
-
-      setLoading(false)
-
       if (authError) {
         setError(authError.message)
         return
       }
-
-      if (data?.session) {
-        onLogin()
-      } else {
-        setError('No se pudo iniciar sesión. Verifica tus credenciales.')
+      if (data?.user) {
+        onStatus('Registro exitoso. Revisa tu correo para confirmar tu cuenta.')
+        setMode('login')
       }
-      return
-    }
-
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    setLoading(false)
-
-    if (authError) {
-      setError(authError.message)
-      return
-    }
-
-    if (data?.user) {
-      onStatus('Registro exitoso. Revisa tu correo para confirmar tu cuenta.')
-      setMode('login')
+    } catch (authError) {
+      setError(`No se pudo completar la autenticación: ${authError.message}`)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -97,6 +89,8 @@ function Login({ onLogin, onStatus }) {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="tu@correo.com"
+                    autoComplete="email"
+                    required
                   />
                 </div>
 
@@ -111,6 +105,9 @@ function Login({ onLogin, onStatus }) {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="********"
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    minLength="6"
+                    required
                   />
                 </div>
 

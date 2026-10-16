@@ -1,30 +1,18 @@
-import React from 'react'
-
-function Footer() {
+function Footer({ onNavigate }) {
   return (
     <footer className="app-footer bg-light border-top py-4 mt-auto">
       <div className="container px-4">
-        <div className="row gy-3">
-          <div className="col-md-4">
-            <h6>Información del proyecto</h6>
-            <p className="mb-0">App creada para gestionar tareas, cronómetro y perfil de usuario.</p>
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+          <div>
+            <strong>Cronómetro PPI</strong>
+            <p className="mb-0 text-muted">Proyecto académico para organizar tareas y tiempo de concentración.</p>
           </div>
-          <div className="col-md-4">
-            <h6>Contacto</h6>
-            <ul className="list-unstyled mb-0">
-              <li>support@cronometro.example</li>
-              <li>+52 55 1234 5678</li>
-            </ul>
-          </div>
-          <div className="col-md-4">
-            <h6>Legal</h6>
-            <ul className="list-unstyled mb-0">
-              <li>Ayuda</li>
-              <li>Política de privacidad</li>
-              <li>Versión 0.1</li>
-            </ul>
-          </div>
+          <nav aria-label="Navegación del pie de página" className="d-flex gap-3">
+            <button type="button" className="btn btn-link p-0" onClick={() => onNavigate('Inicio')}>Inicio</button>
+            <button type="button" className="btn btn-link p-0" onClick={() => onNavigate('Proyecto')}>Proyecto</button>
+          </nav>
         </div>
+        <small className="text-muted d-block mt-3">© {new Date().getFullYear()} Equipo PPI.</small>
       </div>
     </footer>
   )

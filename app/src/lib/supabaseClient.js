@@ -3,11 +3,12 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_KEY
 
-const isDevFallback =
-  !supabaseUrl ||
-  !supabaseKey ||
-  supabaseUrl === 'http://localhost' ||
-  supabaseKey === 'anon_key_for_dev'
+const isPlaceholder = (value) => !value || /^(tu_|your_|anon_key_for_dev|http:\/\/localhost)/i.test(value)
+const hasSupabaseConfig = !isPlaceholder(supabaseUrl) && !isPlaceholder(supabaseKey)
+
+if (!hasSupabaseConfig && !import.meta.env.DEV) {
+  throw new Error('Falta configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY para producción.')
+}
 
 function createDevAuth() {
   const storageKey = 'cronometro-dev-auth'
@@ -45,6 +46,7 @@ function createDevAuth() {
   const saveSession = (email) => {
     const session = {
       user: {
+        id: `local-${email}`,
         email,
       },
       access_token: 'dev-token',
@@ -58,6 +60,10 @@ function createDevAuth() {
   return {
     auth: {
       getSession,
+      getUser: async () => {
+        const { data } = await getSession()
+        return { data: { user: data.session?.user || null }, error: null }
+      },
       onAuthStateChange: (callback) => {
         listeners.add(callback)
         return { data: { subscription: { unsubscribe: () => listeners.delete(callback) } } }
@@ -102,6 +108,8 @@ function createDevAuth() {
   }
 }
 
-export const supabase = isDevFallback
+export const usesSupabase = hasSupabaseConfig
+
+export const supabase = !usesSupabase
   ? createDevAuth()
   : createClient(supabaseUrl, supabaseKey)

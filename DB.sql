@@ -52,3 +52,5 @@ ALTER TABLE estudiante   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cronometro   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tarea        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notificacion ENABLE ROW LEVEL SECURITY;
+-- LEGACY: esquema anterior del proyecto. No ejecutar para la aplicación actual.
+-- Usa supabase/schema.sql; ver también SQL.md.

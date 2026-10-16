@@ -168,3 +168,5 @@ VALUES
 
 
 
+-- LEGACY: datos y políticas de ejercicios anteriores; no ejecutar en producción.
+-- Usa supabase/schema.sql para la aplicación actual. Ver SQL.md.

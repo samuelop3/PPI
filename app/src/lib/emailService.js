@@ -1,19 +1,16 @@
 import emailjs from '@emailjs/browser'
 
 let isInitialized = false
+const isPlaceholder = (value) => !value?.trim() || /^(your_|tu_)|_your_/i.test(value)
 
 export const initEmailJS = () => {
   if (isInitialized) return
   
   const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
   
-  if (PUBLIC_KEY && PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
-    try {
-      emailjs.init(PUBLIC_KEY)
-      isInitialized = true
-    } catch {
-      // Fallo silencioso
-    }
+  if (!isPlaceholder(PUBLIC_KEY)) {
+    emailjs.init(PUBLIC_KEY)
+    isInitialized = true
   }
 }
 
@@ -25,18 +22,7 @@ export const sendRealEmailNotification = async (params) => {
     const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
     const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
 
-    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
-      return { success: false, configured: false }
-    }
-
-    if (
-      SERVICE_ID === 'YOUR_SERVICE_ID' ||
-      SERVICE_ID === 'your_service_id_here' ||
-      TEMPLATE_ID === 'YOUR_TEMPLATE_ID' ||
-      TEMPLATE_ID === 'your_template_id_here' ||
-      PUBLIC_KEY === 'YOUR_PUBLIC_KEY' ||
-      PUBLIC_KEY === 'your_public_key_here'
-    ) {
+    if (isPlaceholder(SERVICE_ID) || isPlaceholder(TEMPLATE_ID) || isPlaceholder(PUBLIC_KEY)) {
       return { success: false, configured: false }
     }
 
@@ -48,15 +34,15 @@ export const sendRealEmailNotification = async (params) => {
     })
 
     return { success: true, configured: true, messageId: result.status }
-  } catch {
-    return { success: false, configured: true }
+  } catch (error) {
+    return { success: false, configured: true, error: error.message }
   }
 }
 
 export const sendEmailNotification = async (params) => {
   const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
 
-  if (!PUBLIC_KEY || PUBLIC_KEY === 'YOUR_PUBLIC_KEY' || PUBLIC_KEY === 'your_public_key_here') {
+  if (isPlaceholder(PUBLIC_KEY)) {
     return { success: false, configured: false }
   }
 

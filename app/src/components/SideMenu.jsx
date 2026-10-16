@@ -1,9 +1,20 @@
-import React, { useState } from 'react'
-import { getProfile } from '../lib/localData'
+import React, { useEffect, useState } from 'react'
+import { loadProfile } from '../lib/dataService'
 
 function SideMenu({ activeSection, onNavigate, userRole = 'user' }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const profile = getProfile()
+  const [profile, setProfile] = useState({ name: '' })
+
+  useEffect(() => {
+    const refreshProfile = () => {
+      loadProfile()
+        .then(setProfile)
+        .catch(() => setProfile({ name: 'Perfil no disponible' }))
+    }
+    refreshProfile()
+    window.addEventListener('profile-updated', refreshProfile)
+    return () => window.removeEventListener('profile-updated', refreshProfile)
+  }, [])
 
   // Menú según rol del usuario
   const menuItems = {
@@ -13,6 +24,7 @@ function SideMenu({ activeSection, onNavigate, userRole = 'user' }) {
       { label: '✅ Tareas', key: 'Tareas', icon: '✅' },
       { label: '🔔 Notificaciones', key: 'Notificaciones', icon: '🔔' },
       { label: '👤 Perfil', key: 'Perfil', icon: '👤' },
+      { label: '📈 Reportes', key: 'Reportes', icon: '📈' },
       { label: '⚙️ Administración', key: 'Admin', icon: '⚙️' },
     ],
     moderator: [
@@ -53,15 +65,18 @@ function SideMenu({ activeSection, onNavigate, userRole = 'user' }) {
           )}
         </div>
         <button
+          type="button"
           className="btn btn-sm btn-light toggle-collapse"
           onClick={() => setIsCollapsed(!isCollapsed)}
           title={isCollapsed ? 'Expandir' : 'Contraer'}
+          aria-label={isCollapsed ? 'Expandir menú lateral' : 'Contraer menú lateral'}
+          aria-expanded={!isCollapsed}
         >
           {isCollapsed ? '→' : '←'}
         </button>
       </div>
 
-      <nav className="side-menu-nav">
+      <nav aria-label="Secciones del panel" className="side-menu-nav">
         {items.map((item) => (
           <button
             key={item.key}

@@ -1,22 +1,35 @@
 import { useEffect, useState } from 'react'
-import { getProfile, saveProfile } from '../lib/localData'
+import { defaultProfile, loadProfile, updateProfile } from '../lib/dataService'
 
 function Perfil() {
-  const [profile, setProfile] = useState(getProfile())
+  const [profile, setProfile] = useState(defaultProfile())
   const [status, setStatus] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    saveProfile(profile)
-  }, [profile])
+    loadProfile()
+      .then(setProfile)
+      .catch((error) => setStatus(`No se pudo cargar el perfil: ${error.message}`))
+      .finally(() => setLoading(false))
+  }, [])
 
   const handleChange = (field, value) => {
     setProfile((current) => ({ ...current, [field]: value }))
   }
 
-  const handleSave = (event) => {
+  const handleSave = async (event) => {
     event.preventDefault()
-    setStatus('Perfil actualizado correctamente.')
-    setTimeout(() => setStatus(''), 3000)
+    setSaving(true)
+    setStatus('')
+    try {
+      setProfile(await updateProfile(profile))
+      setStatus('Perfil actualizado correctamente.')
+    } catch (error) {
+      setStatus(`No se pudo guardar el perfil: ${error.message}`)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -27,17 +40,18 @@ function Perfil() {
             <h2 className="h5 mb-3">Perfil de usuario</h2>
             <p className="text-muted mb-4">Actualiza tus datos personales, gustos y preferencias.</p>
             {status && (
-              <div className="alert alert-success" role="alert">
+              <div className={`alert ${status.startsWith('No se pudo') ? 'alert-danger' : 'alert-success'}`} role="alert">
                 {status}
               </div>
             )}
+            {loading && <p role="status">Cargando perfil…</p>}
             <form onSubmit={handleSave}>
               <div className="row g-3 mb-3">
                 <div className="col-md-6 text-start">
                   <label htmlFor="profileEmail" className="form-label">
                     Correo electrónico
                   </label>
-                  <input id="profileEmail" type="email" className="form-control" value={profile.email} disabled />
+                  <input id="profileEmail" type="email" className="form-control" value={profile.email || ''} disabled />
                 </div>
                 <div className="col-md-6 text-start">
                   <label htmlFor="profilePhone" className="form-label">
@@ -120,8 +134,8 @@ function Perfil() {
                   placeholder="Ej. Café, series, diseño"
                 />
               </div>
-              <button type="submit" className="btn btn-primary">
-                Guardar perfil
+              <button type="submit" className="btn btn-primary" disabled={loading || saving}>
+                {saving ? 'Guardando…' : 'Guardar perfil'}
               </button>
             </form>
           </div>

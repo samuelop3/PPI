@@ -1,32 +1,7 @@
--- Tabla estudiante
-CREATE TABLE estudiante (
-  id_estudiante SERIAL PRIMARY KEY,
-  nombre        VARCHAR(50),
-  correo        VARCHAR(50)
-);
+# Esquema de base de datos actual
 
--- Tabla cronometro
-CREATE TABLE cronometro (
-  id_cronometro  SERIAL PRIMARY KEY,
-  tiempo_trabajo  INTEGER,
-  tiempo_descanso INTEGER,
-  estado          VARCHAR(50),
-  id_estudiante   INTEGER REFERENCES estudiante(id_estudiante) ON DELETE CASCADE
-);
+El esquema que utiliza la aplicación es [`supabase/schema.sql`](./supabase/schema.sql). Incluye perfiles vinculados a `auth.users`, tareas, preferencias Pomodoro, recordatorios programados, Row Level Security y funciones protegidas de administración.
 
--- Tabla tarea
-CREATE TABLE tarea (
-  id_tarea    SERIAL PRIMARY KEY,
-  nombre      VARCHAR(50),
-  descripcion VARCHAR(100),
-  estado      VARCHAR(50)
-);
+Para configurar el envío de correos, sigue el apartado de Supabase del [README](./README.md) y configura [`supabase/schedule_notifications.sql`](./supabase/schedule_notifications.sql) después de desplegar la función Edge.
 
--- Tabla notificacion
-CREATE TABLE notificacion (
-  id_notificacion SERIAL PRIMARY KEY,
-  tipo            VARCHAR(50),
-  mensaje         VARCHAR(100),
-  id_cronometro   INTEGER REFERENCES cronometro(id_cronometro) ON DELETE SET NULL,
-  id_tarea        INTEGER REFERENCES tarea(id_tarea) ON DELETE SET NULL
-);
+Los archivos `DB.sql`, `populardb.sql` y `profiles.md` contienen ejercicios/esquemas históricos incompatibles con la aplicación actual. No los ejecutes en el proyecto Supabase de PPI.

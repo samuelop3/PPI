@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getCronometro, saveCronometro } from '../lib/localData'
+import { loadPomodoroSettings, persistPomodoroSettings, usesSupabase } from '../lib/dataService'
 
 function formatTime(seconds) {
   const minutes = Math.floor(seconds / 60)
@@ -10,10 +11,30 @@ function formatTime(seconds) {
 function Cronometro() {
   const intervalRef = useRef(null)
   const [cronometro, setCronometro] = useState(getCronometro())
+  const [error, setError] = useState('')
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
+  const [canPersistSettings, setCanPersistSettings] = useState(false)
+  const { tiempoTrabajo, tiempoDescanso } = cronometro
 
   useEffect(() => {
-    saveCronometro(cronometro)
+    loadPomodoroSettings()
+      .then((settings) => {
+        setCronometro(settings)
+        setCanPersistSettings(true)
+      })
+      .catch((loadError) => setError(`No se pudo cargar la configuración: ${loadError.message}`))
+      .finally(() => setSettingsLoaded(true))
+  }, [])
+
+  useEffect(() => {
+    if (!usesSupabase) saveCronometro(cronometro)
   }, [cronometro])
+
+  useEffect(() => {
+    if (!settingsLoaded || !canPersistSettings) return
+    persistPomodoroSettings({ tiempoTrabajo, tiempoDescanso })
+      .catch((saveError) => setError(`No se pudo guardar la configuración: ${saveError.message}`))
+  }, [tiempoTrabajo, tiempoDescanso, settingsLoaded, canPersistSettings])
 
   useEffect(() => {
     if (cronometro.estado !== 'activo') {
@@ -72,6 +93,8 @@ function Cronometro() {
 
   return (
     <div className="cronometro-section">
+      {error && <div className="alert alert-danger" role="alert">{error}</div>}
+      {!settingsLoaded && <p role="status">Cargando configuración del cronómetro…</p>}
       <div className="row g-4">
         <div className="col-md-6">
           <div className="border rounded-3 p-4 h-100">
@@ -83,7 +106,7 @@ function Cronometro() {
                 type="button"
                 className="btn btn-outline-primary"
                 onClick={() => handleTipo('trabajo')}
-                disabled={cronometro.tipo === 'trabajo'}
+                disabled={!canPersistSettings || cronometro.tipo === 'trabajo'}
               >
                 Trabajo
               </button>
@@ -91,16 +114,16 @@ function Cronometro() {
                 type="button"
                 className="btn btn-outline-secondary"
                 onClick={() => handleTipo('descanso')}
-                disabled={cronometro.tipo === 'descanso'}
+                disabled={!canPersistSettings || cronometro.tipo === 'descanso'}
               >
                 Descanso
               </button>
             </div>
             <div className="d-flex justify-content-center gap-2">
-              <button type="button" className="btn btn-primary" onClick={handleStartPause}>
+              <button type="button" className="btn btn-primary" onClick={handleStartPause} disabled={!canPersistSettings}>
                 {cronometro.estado === 'activo' ? 'Pausar' : 'Iniciar'}
               </button>
-              <button type="button" className="btn btn-outline-danger" onClick={handleReset}>
+              <button type="button" className="btn btn-outline-danger" onClick={handleReset} disabled={!canPersistSettings}>
                 Reiniciar
               </button>
             </div>
@@ -112,14 +135,17 @@ function Cronometro() {
             <h2 className="h5">Configuración</h2>
             <p className="text-muted mb-4">Ajusta la duración del cronómetro.</p>
             <div className="mb-3">
-              <label className="form-label">Tiempo de trabajo (min)</label>
+              <label htmlFor="workMinutes" className="form-label">Tiempo de trabajo (min)</label>
               <input
+                id="workMinutes"
                 type="number"
                 className="form-control"
                 min="1"
+                max="480"
+                disabled={!canPersistSettings}
                 value={cronometro.tiempoTrabajo}
                 onChange={(event) => {
-                  const value = Number(event.target.value) || 1
+                  const value = Math.min(480, Math.max(1, Number(event.target.value) || 1))
                   setCronometro((current) => ({
                     ...current,
                     tiempoTrabajo: value,
@@ -129,14 +155,17 @@ function Cronometro() {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Tiempo de descanso (min)</label>
+              <label htmlFor="breakMinutes" className="form-label">Tiempo de descanso (min)</label>
               <input
+                id="breakMinutes"
                 type="number"
                 className="form-control"
                 min="1"
+                max="480"
+                disabled={!canPersistSettings}
                 value={cronometro.tiempoDescanso}
                 onChange={(event) => {
-                  const value = Number(event.target.value) || 1
+                  const value = Math.min(480, Math.max(1, Number(event.target.value) || 1))
                   setCronometro((current) => ({
                     ...current,
                     tiempoDescanso: value,

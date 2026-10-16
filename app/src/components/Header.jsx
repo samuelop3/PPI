@@ -1,41 +1,47 @@
-import React, { useState } from 'react'
-import { getProfile } from '../lib/localData'
+import React, { useEffect, useState } from 'react'
+import { loadProfile } from '../lib/dataService'
 
 function Header({ isAuthenticated, activeSection, onNavigate, onLogout, userRole = 'user' }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const profile = getProfile()
+  const [profileName, setProfileName] = useState('')
 
-  // Enlaces según autenticación y rol
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setProfileName('')
+      return
+    }
+    const refreshProfile = () => {
+      loadProfile()
+        .then((profile) => setProfileName(profile.name))
+        .catch(() => setProfileName('Perfil no disponible'))
+    }
+    refreshProfile()
+    window.addEventListener('profile-updated', refreshProfile)
+    return () => window.removeEventListener('profile-updated', refreshProfile)
+  }, [isAuthenticated])
+
   const publicLinks = [
     { label: '🏠 Inicio', key: 'Inicio', icon: '🏠', protected: false },
     { label: '📋 Proyecto', key: 'Proyecto', icon: '📋', protected: false },
+    { label: '🔐 Acceder', key: 'Acceso', icon: '🔐', protected: false },
   ]
 
-  const authenticatedLinks =
-    userRole === 'admin'
-      ? [
-          { label: '⏱️ Cronómetro', key: 'Cronómetro', icon: '⏱️', protected: true },
-          { label: '✅ Tareas', key: 'Tareas', icon: '✅', protected: true },
-          { label: '🔔 Notificaciones', key: 'Notificaciones', icon: '🔔', protected: true },
-          { label: '👤 Perfil', key: 'Perfil', icon: '👤', protected: true },
-          { label: '⚙️ Admin', key: 'Admin', icon: '⚙️', protected: true },
-        ]
-      : userRole === 'moderator'
-        ? [
-            { label: '⏱️ Cronómetro', key: 'Cronómetro', icon: '⏱️', protected: true },
-            { label: '✅ Tareas', key: 'Tareas', icon: '✅', protected: true },
-            { label: '🔔 Notificaciones', key: 'Notificaciones', icon: '🔔', protected: true },
-            { label: '👤 Perfil', key: 'Perfil', icon: '👤', protected: true },
-            { label: '📈 Reportes', key: 'Reportes', icon: '📈', protected: true },
-          ]
-        : [
-            { label: '⏱️ Cronómetro', key: 'Cronómetro', icon: '⏱️', protected: true },
-            { label: '✅ Tareas', key: 'Tareas', icon: '✅', protected: true },
-            { label: '🔔 Notificaciones', key: 'Notificaciones', icon: '🔔', protected: true },
-            { label: '👤 Perfil', key: 'Perfil', icon: '👤', protected: true },
-          ]
+  const authenticatedLinks = [
+    { label: '⏱️ Cronómetro', key: 'Cronómetro', icon: '⏱️', protected: true },
+    { label: '✅ Tareas', key: 'Tareas', icon: '✅', protected: true },
+    { label: '🔔 Notificaciones', key: 'Notificaciones', icon: '🔔', protected: true },
+    { label: '👤 Perfil', key: 'Perfil', icon: '👤', protected: true },
+    ...(userRole === 'admin'
+      ? [{ label: '⚙️ Admin', key: 'Admin', icon: '⚙️', protected: true }]
+      : []),
+    ...(['admin', 'moderator'].includes(userRole)
+      ? [{ label: '📈 Reportes', key: 'Reportes', icon: '📈', protected: true }]
+      : []),
+  ]
 
-  const allLinks = isAuthenticated ? [...publicLinks, ...authenticatedLinks] : publicLinks
+  const allLinks = isAuthenticated
+    ? [...publicLinks.filter((link) => link.key !== 'Acceso'), ...authenticatedLinks]
+    : publicLinks
 
   const getRoleColor = () => {
     if (userRole === 'admin') return 'danger'
@@ -61,13 +67,14 @@ function Header({ isAuthenticated, activeSection, onNavigate, onLogout, userRole
         </div>
 
         {/* Menú escritorio */}
-        <nav className="d-none d-lg-flex align-items-center gap-2 mt-3 mt-lg-0">
+        <nav aria-label="Navegación principal" className="d-none d-lg-flex align-items-center gap-2 mt-3 mt-lg-0">
           {allLinks.map((link) => (
             <button
               key={link.key}
               type="button"
               className={`btn btn-sm ${activeSection === link.key ? 'btn-light text-primary' : 'btn-outline-light'}`}
               onClick={() => onNavigate(link.key)}
+              aria-current={activeSection === link.key ? 'page' : undefined}
             >
               {link.icon} {link.label}
             </button>
@@ -76,8 +83,11 @@ function Header({ isAuthenticated, activeSection, onNavigate, onLogout, userRole
 
         {/* Menú móvil toggle */}
         <button
+          type="button"
           className="btn btn-light btn-sm d-lg-none ms-auto me-2"
           onClick={() => setShowMobileMenu(!showMobileMenu)}
+          aria-expanded={showMobileMenu}
+          aria-label={showMobileMenu ? 'Cerrar menú' : 'Abrir menú'}
         >
           ☰
         </button>
@@ -87,7 +97,7 @@ function Header({ isAuthenticated, activeSection, onNavigate, onLogout, userRole
           {isAuthenticated ? (
             <div className="d-flex align-items-center gap-2">
               <div className="text-white-75 text-end">
-                <div className="small">{profile.name || 'Usuario'}</div>
+                <div className="small">{profileName || 'Usuario'}</div>
                 <span className={`badge bg-${getRoleColor()}`}>{getRoleLabel()}</span>
               </div>
               <button type="button" className="btn btn-outline-light btn-sm" onClick={onLogout}>
@@ -103,7 +113,7 @@ function Header({ isAuthenticated, activeSection, onNavigate, onLogout, userRole
       {/* Menú móvil expandible */}
       {showMobileMenu && (
         <div className="d-lg-none mobile-menu bg-primary border-top border-light">
-          <nav className="d-flex flex-column p-3 gap-2">
+          <nav aria-label="Navegación móvil" className="d-flex flex-column p-3 gap-2">
             {allLinks.map((link) => (
               <button
                 key={link.key}
@@ -115,6 +125,7 @@ function Header({ isAuthenticated, activeSection, onNavigate, onLogout, userRole
                   onNavigate(link.key)
                   setShowMobileMenu(false)
                 }}
+                aria-current={activeSection === link.key ? 'page' : undefined}
               >
                 {link.icon} {link.label}
               </button>
